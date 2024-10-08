@@ -8,15 +8,15 @@ devtools::install_github("TESS-Laboratory/chmloader")
 devtools::install_github("rstudio/leaflet")
 
 pacman::p_load(
-    chmloader,
-    terra,
-    sf,
-    maptiles,
-    classInt,
-    tidyverse,
-    tidyterra,
-    leaflet,
-    htmlwidgets
+    chmloader,  #fetch chm data from area of interest
+    terra,      #raster handeling
+    sf,         #shapefile handeling
+    maptiles,   #street view layerbackground 
+    classInt,   #data intervals: natural interval breaks
+    tidyverse,  #ggplot2 from tidyverse umbrella
+    tidyterra,  #incorporate street view layer
+    leaflet,    #create interactive maps in R
+    htmlwidgets #export interactive map to html
 )
 
 # 2. DEFINE BUFFER
@@ -27,13 +27,13 @@ pacman::p_load(
 lat <- 59.911491
 long <- 10.757933
 
+#point with city
 city_coords <- sf::st_point(
-    c(long, lat)
-) |>
-sf::st_sfc(crs = 4326) |>
-sf::st_buffer(
-    dist = units::set_units(
-        2, km
+    c(long, lat)) |>
+  sf::st_sfc(crs = 4326) |>   #set crs
+  sf::st_buffer(              #set buffer
+    dist = units::set_units(  
+        2, km #buffer of 2 km
     )
 )
 
@@ -92,14 +92,14 @@ names(city_chm_df)[3] <- "chm"
 
 breaks <- classInt::classIntervals(
     var = city_chm_df$chm,
-    n = 6,
-    style = "equal"
-)$brks
+    n = 6,  #4 to 8
+    style = "equal" #equal spacing
+)$brks #breaks object is a list, break values are saved in "brks"
 
 colors <- hcl.colors(
-    length(breaks),
-    "ag_GrnYl",
-    rev = TRUE
+    length(breaks), #number of colors
+    "ag_GrnYl", #color palette: https://blog.r-project.org/post/2019-04-01-hcl-colors_files/figure-html/swatch-plot-1.svg 
+    rev = TRUE #light map -> 
 )
 
 # 7. MAP
@@ -108,7 +108,7 @@ colors <- hcl.colors(
 map <- ggplot(city_chm_df) +
 tidyterra::geom_spatraster_rgb(
     data = streets,
-    maxcell = 3e6
+    maxcell = 3e6 #to make the map crisp and not blurry: based on width x height of the city_chm_df (1692 * 1689 ~= 3.000.000 = 3e6 (3 million))
 ) +
 geom_raster(
     aes(
